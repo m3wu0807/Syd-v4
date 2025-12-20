@@ -2,70 +2,366 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>我的行程本｜Sydney Diary（單檔版）</title>
+  <title>我的行程本｜Sydney Diary V2.3</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     :root {
       --primary-color: #111827;
+      --secondary-color: #374151;
       --accent-color: #2563eb;
       --bg-color: #f5f5f7;
+      --card-bg: #ffffff;
+      --text-title: #111827;
+      --text-subtitle: #4b5563;
+      --text-body: #374151;
+      --text-muted: #6b7280;
     }
+
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
+
     body {
       background: var(--bg-color);
-      color: #222;
+      color: var(--text-body);
     }
+
+    a {
+      color: var(--accent-color);
+      text-decoration: none;
+    }
+
     .app {
       max-width: 1100px;
       margin: 0 auto;
       padding: 16px;
     }
-    .app-header {
-      text-align: center;
-      margin-bottom: 16px;
+
+    /* ========= HEADER ========= */
+    .top-bar {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 12px;
     }
-    .app-header h1 {
-      font-size: 24px;
+
+    #sidebar-toggle {
+      border: none;
+      background: var(--card-bg);
+      border-radius: 999px;
+      width: 32px;
+      height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+      cursor: pointer;
+    }
+
+    #sidebar-toggle span {
+      display: block;
+      width: 14px;
+      height: 2px;
+      background: var(--primary-color);
+      position: relative;
+    }
+
+    #sidebar-toggle span::before,
+    #sidebar-toggle span::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      width: 14px;
+      height: 2px;
+      background: var(--primary-color);
+    }
+
+    #sidebar-toggle span::before { top: -4px; }
+    #sidebar-toggle span::after { top: 4px; }
+
+    .top-bar-main {
+      flex: 1;
+    }
+
+    .app-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-title);
       margin-bottom: 4px;
     }
+
     .subtitle {
-      font-size: 14px;
-      color: #666;
-    }
-    .top-controls {
-      display: flex;
-      justify-content: flex-end;
+      font-size: 12px;
+      color: var(--text-muted);
       margin-bottom: 8px;
     }
-    .theme-panel {
-      background: #fff;
-      border-radius: 12px;
-      padding: 10px 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      font-size: 12px;
-      max-width: 360px;
+
+    .time-weather-row {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 8px;
+      align-items: center;
+      overflow-x: auto;
     }
+
+    .time-block,
+    .weather-block {
+      background: var(--card-bg);
+      border-radius: 999px;
+      padding: 6px 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.04);
+      font-size: 11px;
+      color: var(--text-subtitle);
+      flex-shrink: 0;
+    }
+
+    .time-label {
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+
+    .time-main {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .icon-circle {
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      border: 1.5px solid var(--primary-color);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+    }
+
+    .icon-clock::before {
+      content: "⌚";
+      font-size: 9px;
+      transform: translateY(-0.5px);
+    }
+
+    .icon-weather::before {
+      content: "☁";
+      font-size: 9px;
+      transform: translateY(-0.5px);
+    }
+
+    /* ========= OVERLAY & LAYOUT ========= */
+    #sidebar-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.3);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s ease;
+      z-index: 9;
+    }
+
+    #sidebar-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .layout {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      position: relative;
+    }
+
+    /* ========= SIDEBAR ========= */
+    .sidebar {
+      width: 260px;
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 14px 12px 28px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .sidebar-trip-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--primary-color);
+      margin-bottom: 4px;
+    }
+
+    .sidebar-trip-dates {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .sidebar-section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--secondary-color);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .sidebar-section-title span.icon-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--accent-color);
+    }
+
+    /* Day list */
+    #day-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+/* 側邊欄：天數列表（3 欄固定對齊，不超出欄寬） */
+.day-list-item {
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: 60px 52px minmax(0, 1fr); /* 左：Day／出發日，中：日期，右：主題 */
+  align-items: center;
+  column-gap: 4px;
+  color: var(--text-body);
+}
+
+.day-list-item .day-col1,
+.day-list-item .day-col2 {
+  white-space: nowrap;                /* Day / 日期 一律一行 */
+}
+
+.day-list-item .day-col3 {
+  min-width: 0;
+  white-space: nowrap;                /* 主題過長就 … */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+    .day-list-item.active {
+      background: var(--primary-color);
+      color: #fff;
+    }
+
+    /* Cards (FX / Theme) */
+    .card {
+      background: var(--bg-color);
+      border-radius: 12px;
+      padding: 10px;
+      font-size: 11px;
+    }
+
+    /* FX card */
+    .fx-main-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-size: 11px;
+      color: var(--text-subtitle);
+    }
+
+    .fx-rate-label {
+      font-weight: 500;
+    }
+
+    .icon-btn {
+      border-radius: 999px;
+      border: 1px solid #e5e7eb;
+      background: #ffffff;
+      font-size: 11px;
+      padding: 2px 6px;
+      cursor: pointer;
+      color: var(--accent-color);
+    }
+
+    .icon-btn:active {
+      transform: translateY(1px);
+    }
+
+    .fx-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 4px;
+    }
+
+    .fx-row label {
+      min-width: 44px;
+    }
+
+    .fx-row input[type="number"] {
+      flex: 1;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      padding: 4px 6px;
+      font-size: 11px;
+    }
+
+    .fx-tagline {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* Theme card */
     .theme-row {
       display: flex;
       align-items: center;
       gap: 6px;
       margin-bottom: 6px;
+      position: relative;
     }
-    .theme-row input[type="color"] {
-      border: none;
-      background: transparent;
-      width: 40px;
-      height: 24px;
-      padding: 0;
+
+    .theme-row label {
+      min-width: 40px;
+      font-size: 11px;
     }
+
+    .theme-preview {
+      flex: 1;
+      height: 18px;
+      border-radius: 999px;
+      background: var(--primary-color);
+      border: 1px solid #e5e7eb;
+    }
+
+    .theme-color-input {
+      position: absolute;
+      top: 0;
+      left: 40px; /* 跟 label 對齊右側 */
+      right: 0;
+      bottom: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
     .theme-row input[type="range"] {
       flex: 1;
     }
+
+    .theme-row input[type="text"] {
+      flex: 1;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      padding: 4px 6px;
+      font-size: 11px;
+      background: #f9fafb;
+    }
+
     .small-button {
       font-size: 11px;
       padding: 4px 8px;
@@ -74,71 +370,32 @@
       background: #f9fafb;
       cursor: pointer;
     }
-    .layout {
-      display: flex;
-      gap: 16px;
-      align-items: flex-start;
-    }
-    .sidebar {
-      width: 260px;
-      background: #fff;
-      border-radius: 12px;
-      padding: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    }
-    .sidebar h2 {
-      font-size: 16px;
-      margin-bottom: 8px;
-    }
-    #trip-list {
-      list-style: none;
-    }
-    .trip-item {
-      padding: 8px 10px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    .trip-item:hover {
-      background: #f3f4f6;
-    }
-    .trip-item.active {
-      background: var(--primary-color);
-      color: #fff;
-    }
+
+    /* ========= CONTENT ========= */
     .content {
       flex: 1;
       display: flex;
       flex-direction: column;
       gap: 12px;
+      z-index: 1;
     }
-    .day-tabs {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-bottom: 4px;
-    }
-    .day-tab {
-      font-size: 12px;
-      padding: 4px 8px;
-      border-radius: 999px;
-      border: 1px solid #e5e7eb;
-      background: #f9fafb;
-      cursor: pointer;
-    }
-    .day-tab.active {
-      background: var(--primary-color);
-      color: #fff;
-      border-color: var(--primary-color);
-    }
+
     #day-header,
-    #day-schedule,
-    #day-meals {
-      background: #fff;
-      border-radius: 12px;
-      padding: 14px 16px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    }
+#day-schedule,
+#day-meals {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  min-height: 110px;
+  width: 100%;          /* ✅ 一律佔滿內容寬度 */
+  box-sizing: border-box;
+}
+    /* 讓三張白底卡真的貼齊內容區，不要縮進去 */
+.content > section {
+  width: 100%;
+}
+
     .day-banner {
       display: flex;
       justify-content: space-between;
@@ -147,48 +404,94 @@
       margin-bottom: 8px;
       font-size: 12px;
     }
+
     .banner-label {
       font-weight: 600;
       margin-right: 4px;
+      color: var(--secondary-color);
     }
-    .banner-weather {
-      display: flex;
+
+    .banner-hotel-name {
+      color: var(--primary-color);
+      font-weight: 500;
+    }
+
+    .banner-hotel-link {
+      display: inline-flex;
       align-items: center;
       gap: 4px;
+      font-size: 11px;
+      color: var(--accent-color);
     }
-    .weather-icon {
-      font-size: 16px;
+
+    .icon-map {
+      width: 14px;
+      height: 14px;
+      position: relative;
+      display: inline-block;
     }
-    .weather-text {
-      font-size: 12px;
+
+    .icon-map::before {
+      content: "";
+      position: absolute;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--accent-color);
+      top: 0px;
+      left: 2.5px;
     }
+
+    .icon-map::after {
+      content: "";
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      border-radius: 999px;
+      background: #ffffff;
+      top: 2.5px;
+      left: 5px;
+    }
+
     .day-title {
       font-size: 18px;
       font-weight: 600;
+      color: var(--text-title);
       margin-bottom: 4px;
     }
+
     .day-subtitle {
       font-size: 13px;
-      color: #555;
+      color: var(--text-subtitle);
       margin-bottom: 6px;
     }
+
     .badge-row {
-      margin-bottom: 4px;
+      margin-top: 4px;
     }
+
     .badge {
       display: inline-block;
       font-size: 11px;
       padding: 2px 8px;
       border-radius: 999px;
       background: #f3f4f6;
-      color: #374151;
+      color: var(--text-muted);
       margin-right: 4px;
     }
+
+    .badge-highcal {
+      background: #fef2f2;
+      color: #b91c1c;
+    }
+
     .section-title {
       font-size: 15px;
       font-weight: 600;
       margin-bottom: 8px;
+      color: var(--secondary-color);
     }
+
     .schedule-row {
       display: grid;
       grid-template-columns: 80px 1fr;
@@ -196,56 +499,68 @@
       padding: 8px 0;
       border-bottom: 1px dashed #e5e7eb;
     }
+
     .schedule-row:last-child {
       border-bottom: none;
     }
+
     .time-cell {
       font-size: 12px;
       font-weight: 500;
-      color: #4b5563;
+      color: var(--text-subtitle);
     }
+
     .block-title {
       font-size: 14px;
       font-weight: 500;
       margin-bottom: 2px;
+      color: var(--text-title);
     }
+
     .block-detail {
       font-size: 12px;
-      color: #4b5563;
+      color: var(--text-body);
     }
+
     .block-meta {
       font-size: 11px;
-      color: #6b7280;
+      color: var(--text-muted);
       margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
-    .block-meta a {
-      color: var(--accent-color);
-      text-decoration: none;
-      margin-left: 4px;
-    }
+
     .meals-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: 8px;
     }
+
     .meal-card {
       padding: 10px;
       border-radius: 10px;
       background: #f9fafb;
     }
+
     .meal-title {
       font-size: 13px;
       font-weight: 600;
       margin-bottom: 4px;
+      color: var(--secondary-color);
     }
+
     .meal-restaurant {
       font-size: 13px;
       margin-bottom: 2px;
+      color: var(--text-title);
     }
+
     .meal-note {
       font-size: 12px;
-      color: #4b5563;
+      color: var(--text-body);
     }
+
     .meal-tag {
       display: inline-block;
       margin-top: 4px;
@@ -253,115 +568,433 @@
       padding: 2px 6px;
       border-radius: 999px;
       background: #e5e7eb;
+      color: #6b7280;
     }
+
+    .meal-tag-reserve {
+      background: #eff6ff;
+      color: #1d4ed8;
+    }
+
+    /* ========= RESPONSIVE ========= */
     @media (max-width: 768px) {
-      .layout { flex-direction: column; }
-      .sidebar { width: 100%; }
-      .day-banner { flex-direction: column; align-items: flex-start; }
+      .layout {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+        border-radius: 0 12px 12px 0;
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+    }
+
+    @media (min-width: 769px) {
+      #sidebar-overlay {
+        display: none;
+      }
     }
   </style>
 </head>
 <body>
   <div class="app">
-    <header class="app-header">
-      <h1>我的行程本｜Sydney Diary</h1>
-      <p class="subtitle">單檔版｜已自動載入行程，不需輸入密碼</p>
+    <!-- HEADER -->
+    <header>
+      <div class="top-bar">
+        <button id="sidebar-toggle" aria-label="開啟側邊選單">
+          <span></span>
+        </button>
+        <div class="top-bar-main">
+          <div class="app-title">我的行程本｜Sydney Diary</div>
+          <div class="subtitle">V2.3｜單檔版｜已自動載入行程，不需輸入密碼</div>
+          <div class="time-weather-row">
+            <div class="time-block">
+              <div class="icon-circle icon-clock"></div>
+              <div>
+                <div class="time-label">台北 TPE</div>
+                <div class="time-main" id="time-tpe">--:--</div>
+              </div>
+            </div>
+            <div class="time-block">
+              <div class="icon-circle icon-clock"></div>
+              <div>
+                <div class="time-label">雪梨 SYD</div>
+                <div class="time-main" id="time-syd">--:--</div>
+              </div>
+            </div>
+            <div class="weather-block" id="weather-block">
+              <div class="icon-circle icon-weather"></div>
+              <div>
+                <div class="time-label">雪梨天氣</div>
+                <div id="weather-main">載入中…</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </header>
 
-    <main>
-      <section id="app-section">
-        <div class="top-controls">
-          <div class="theme-panel">
-            <div class="theme-title">🎨 網站色系</div>
-            <div class="theme-row">
-              <label for="theme-color">主色</label>
-              <input type="color" id="theme-color">
-            </div>
-            <div class="theme-row">
-              <span>RGB</span>
-              <input type="range" id="r-range" min="0" max="255">
-              <input type="range" id="g-range" min="0" max="255">
-              <input type="range" id="b-range" min="0" max="255">
-            </div>
-            <button id="reset-theme-btn" class="small-button">恢復預設</button>
+    <!-- OVERLAY -->
+    <div id="sidebar-overlay"></div>
+
+    <!-- LAYOUT -->
+    <div class="layout">
+      <!-- SIDEBAR -->
+      <aside class="sidebar" id="sidebar">
+        <div>
+          <div class="sidebar-trip-title" id="trip-title">雪梨跨年 10 日遊</div>
+          <div class="sidebar-trip-dates" id="trip-dates">2025/12/23 – 2026/01/02</div>
+        </div>
+
+        <div>
+          <div class="sidebar-section-title">
+            <span class="icon-dot"></span><span>🗓 天數</span>
+          </div>
+          <ul id="day-list"></ul>
+        </div>
+
+        <div class="card">
+          <div class="sidebar-section-title">
+            <span class="icon-dot"></span><span>💱 匯率換算</span>
+          </div>
+          <div class="fx-main-line">
+            <span class="fx-rate-label" id="fx-label">1 AUD ≈ -- TWD</span>
+            <button id="fx-refresh" class="icon-btn" type="button">⟳ 更新</button>
+          </div>
+          <div class="fx-row">
+            <label for="fx-aud">AUD</label>
+            <input type="number" id="fx-aud" step="0.01">
+          </div>
+          <div class="fx-row">
+            <label for="fx-twd">TWD</label>
+            <input type="number" id="fx-twd" step="1">
+          </div>
+          <div class="fx-tagline" id="fx-tagline">
+            匯率由網路更新，僅供參考。輸入任一欄，另一邊會自動幫你算。
           </div>
         </div>
 
-        <div class="layout">
-          <aside class="sidebar">
-            <h2>旅程列表</h2>
-            <ul id="trip-list"></ul>
-          </aside>
-          <section class="content">
-            <div id="day-tabs" class="day-tabs"></div>
-            <div id="day-header"></div>
-            <div id="day-schedule"></div>
-            <div id="day-meals"></div>
-          </section>
+        <div class="card">
+          <div class="sidebar-section-title">
+            <span class="icon-dot"></span><span>🎨 主題色系</span>
+          </div>
+          <div class="theme-row">
+            <label for="theme-color">主色</label>
+            <div class="theme-preview" id="theme-preview"></div>
+            <input type="color" id="theme-color" class="theme-color-input">
+          </div>
+          <div class="theme-row">
+            <label>R</label>
+            <input type="range" id="r-range" min="0" max="255">
+          </div>
+          <div class="theme-row">
+            <label>G</label>
+            <input type="range" id="g-range" min="0" max="255">
+          </div>
+          <div class="theme-row">
+            <label>B</label>
+            <input type="range" id="b-range" min="0" max="255">
+          </div>
+          <div class="theme-row">
+            <label>色碼</label>
+            <input type="text" id="theme-hex" readonly>
+          </div>
+          <button id="reset-theme-btn" class="small-button">恢復預設</button>
         </div>
-      </section>
-    </main>
+      </aside>
+
+      <!-- CONTENT -->
+      <main class="content">
+        <section id="day-header"></section>
+        <section id="day-schedule"></section>
+        <section id="day-meals"></section>
+      </main>
+    </div>
   </div>
 
   <script>
-    // ----- 主題控制 -----
-    function applyTheme(theme) {
-      var root = document.documentElement;
-      root.style.setProperty("--primary-color", theme.primary);
-      root.style.setProperty("--accent-color", theme.primary);
-      root.style.setProperty("--bg-color", theme.bg || "#f5f5f7");
-      document.getElementById("theme-color").value = theme.hex;
-      document.getElementById("r-range").value = theme.r;
-      document.getElementById("g-range").value = theme.g;
-      document.getElementById("b-range").value = theme.b;
-    }
-    function defaultTheme() {
-      return { primary:"rgb(17,24,39)", r:17, g:24, b:39, hex:"#111827", bg:"#f5f5f7" };
-    }
+    /* ========= 顏色與主題 ========= */
     function rgbToHex(r,g,b){
       function h(x){var s=x.toString(16);return s.length===1?"0"+s:s;}
       return "#"+h(r)+h(g)+h(b);
     }
+
+    function hexToRgb(hex){
+      hex = hex.replace("#","");
+      var r = parseInt(hex.slice(0,2),16);
+      var g = parseInt(hex.slice(2,4),16);
+      var b = parseInt(hex.slice(4,6),16);
+      return {r:r,g:g,b:b};
+    }
+
+    function mixWithWhite(r,g,b,ratio){
+      return {
+        r: Math.round(r + (255 - r)*ratio),
+        g: Math.round(g + (255 - g)*ratio),
+        b: Math.round(b + (255 - b)*ratio)
+      };
+    }
+
+    function applyTheme(theme){
+      var root = document.documentElement;
+      root.style.setProperty("--primary-color", theme.primary);
+      root.style.setProperty("--secondary-color", theme.secondary);
+      root.style.setProperty("--accent-color", theme.accent);
+      root.style.setProperty("--bg-color", theme.bg || "#f5f5f7");
+      root.style.setProperty("--card-bg", "#ffffff");
+
+      root.style.setProperty("--text-title", "#111827");
+      root.style.setProperty("--text-subtitle", "#4b5563");
+      root.style.setProperty("--text-body", "#374151");
+      root.style.setProperty("--text-muted", "#6b7280");
+
+      var colorInput = document.getElementById("theme-color");
+      var rRange = document.getElementById("r-range");
+      var gRange = document.getElementById("g-range");
+      var bRange = document.getElementById("b-range");
+      var hexInput = document.getElementById("theme-hex");
+
+      if(colorInput) colorInput.value = theme.hex;
+      if(rRange) rRange.value = theme.r;
+      if(gRange) gRange.value = theme.g;
+      if(bRange) bRange.value = theme.b;
+      if(hexInput) hexInput.value = theme.hex.toUpperCase();
+    }
+
+    function defaultTheme(){
+      var r=17,g=24,b=39;
+      var secondaryRGB = mixWithWhite(r,g,b,0.25);
+      var accentRGB = mixWithWhite(r,g,b,0.15);
+      return {
+        primary: "rgb("+r+","+g+","+b+")",
+        secondary: "rgb("+secondaryRGB.r+","+secondaryRGB.g+","+secondaryRGB.b+")",
+        accent: "rgb("+accentRGB.r+","+accentRGB.g+","+accentRGB.b+")",
+        r:r,g:g,b:b,
+        hex:"#111827",
+        bg:"#f5f5f7"
+      };
+    }
+
+    function computeThemeFromRGB(r,g,b){
+      var secondaryRGB = mixWithWhite(r,g,b,0.25);
+      var accentRGB = mixWithWhite(r,g,b,0.15);
+      return {
+        primary: "rgb("+r+","+g+","+b+")",
+        secondary: "rgb("+secondaryRGB.r+","+secondaryRGB.g+","+secondaryRGB.b+")",
+        accent: "rgb("+accentRGB.r+","+accentRGB.g+","+accentRGB.b+")",
+        r:r,g:g,b:b,
+        hex: rgbToHex(r,g,b),
+        bg:"#f5f5f7"
+      };
+    }
+
     function initThemeUI(){
       var t = defaultTheme();
       applyTheme(t);
+
       var tc = document.getElementById("theme-color");
       var r  = document.getElementById("r-range");
       var g  = document.getElementById("g-range");
       var b  = document.getElementById("b-range");
       var reset = document.getElementById("reset-theme-btn");
-      tc.addEventListener("input",function(e){
-        var hex = e.target.value;
-        var rr = parseInt(hex.slice(1,3),16);
-        var gg = parseInt(hex.slice(3,5),16);
-        var bb = parseInt(hex.slice(5,7),16);
-        applyTheme({primary:"rgb("+rr+","+gg+","+bb+")", r:rr,g:gg,b:bb,hex:hex,bg:"#f5f5f7"});
-      });
+
+      if(tc){
+        tc.addEventListener("input", function(e){
+          var hex = e.target.value;
+          var rgb = hexToRgb(hex);
+          var theme = computeThemeFromRGB(rgb.r,rgb.g,rgb.b);
+          applyTheme(theme);
+        });
+      }
+
       [r,g,b].forEach(function(range){
+        if(!range) return;
         range.addEventListener("input",function(){
           var rr = parseInt(r.value||"17",10);
           var gg = parseInt(g.value||"24",10);
           var bb = parseInt(b.value||"39",10);
-          var hex = rgbToHex(rr,gg,bb);
-          applyTheme({primary:"rgb("+rr+","+gg+","+bb+")", r:rr,g:gg,b:bb,hex:hex,bg:"#f5f5f7"});
+          var theme = computeThemeFromRGB(rr,gg,bb);
+          applyTheme(theme);
         });
       });
-      reset.addEventListener("click",function(){ applyTheme(defaultTheme()); });
+
+      if(reset){
+        reset.addEventListener("click",function(){
+          var t = defaultTheme();
+          applyTheme(t);
+        });
+      }
     }
 
-    // ----- 行程資料（簡化版 10 天） -----
+    /* ========= 時間列 ========= */
+    function updateTimes(){
+      try {
+        var now = new Date();
+        var tpe = new Intl.DateTimeFormat('zh-TW', {
+          hour:'2-digit', minute:'2-digit', hour12:false, timeZone:'Asia/Taipei'
+        }).format(now);
+        var syd = new Intl.DateTimeFormat('zh-TW', {
+          hour:'2-digit', minute:'2-digit', hour12:false, timeZone:'Australia/Sydney'
+        }).format(now);
+        document.getElementById("time-tpe").textContent = tpe;
+        document.getElementById("time-syd").textContent = syd;
+      } catch(e) {
+        document.getElementById("time-tpe").textContent = "--:--";
+        document.getElementById("time-syd").textContent = "--:--";
+      }
+    }
+
+    /* ========= 雪梨即時天氣（Open-Meteo） ========= */
+    function fetchSydneyWeather(){
+      var weatherMain = document.getElementById("weather-main");
+      var url = "https://api.open-meteo.com/v1/forecast?latitude=-33.8688&longitude=151.2093&current_weather=true";
+      fetch(url)
+        .then(function(res){ return res.json(); })
+        .then(function(data){
+          if(!data || !data.current_weather){
+            weatherMain.textContent = "暫時無法取得天氣";
+            return;
+          }
+          var cw = data.current_weather;
+          var temp = cw.temperature;
+          var wind = cw.windspeed;
+          var code = cw.weathercode;
+          var iconChar = "☁";
+          if(code === 0) iconChar = "☀";
+          else if(code === 1 || code === 2) iconChar = "🌤";
+          else if(code === 3) iconChar = "☁";
+          else if(code >= 51 && code <= 67) iconChar = "🌦";
+          else if(code >= 71 && code <= 77) iconChar = "❄";
+          else if(code >= 80 && code <= 82) iconChar = "🌧";
+          else if(code >= 95) iconChar = "⛈";
+
+          weatherMain.textContent =
+            iconChar + " " + temp.toFixed(1) + "°C｜風 " + wind.toFixed(0) + " km/h";
+        })
+        .catch(function(){
+          weatherMain.textContent = "載入失敗，可點 Google 搜尋天氣";
+        });
+    }
+
+    /* ========= 匯率換算（自動更新＋失敗 fallback） ========= */
+    var fxRate = 20.00; // 預設先當 20
+
+    function updateFxLabel(normal){
+      var label = document.getElementById("fx-label");
+      if(!label) return;
+      if(normal){
+        label.textContent = "1 AUD ≈ " + fxRate.toFixed(2) + " TWD";
+      }else{
+        label.textContent = "1 AUD ≈ " + fxRate.toFixed(2) + " TWD（更新失敗，暫用 20 計算）";
+      }
+    }
+
+    function fetchFxRate(){
+      var label = document.getElementById("fx-label");
+      var tagline = document.getElementById("fx-tagline");
+      if(label) label.textContent = "匯率更新中…";
+
+      fetch("https://api.exchangerate.host/latest?base=AUD&symbols=TWD")
+        .then(function(res){ return res.json(); })
+        .then(function(data){
+          if(data && data.rates && data.rates.TWD){
+            fxRate = data.rates.TWD;
+            localStorage.setItem("sydDiaryFxRate", fxRate.toString());
+            updateFxLabel(true);
+            if(tagline){
+              tagline.textContent = "匯率已更新自網路，僅供參考。輸入任一欄，另一邊會自動幫你算。";
+            }
+          } else {
+            // 更新失敗：維持原本或改成 20
+            if(isNaN(fxRate) || fxRate <= 0){
+              fxRate = 20.0;
+            }
+            updateFxLabel(false);
+            if(tagline){
+              tagline.textContent = "匯率更新失敗，暫以 20.00 計算。仍可輸入金額換算。";
+            }
+          }
+        })
+        .catch(function(){
+          if(isNaN(fxRate) || fxRate <= 0){
+            fxRate = 20.0;
+          }
+          updateFxLabel(false);
+          if(tagline){
+            tagline.textContent = "匯率更新失敗，暫以 20.00 計算。仍可輸入金額換算。";
+          }
+        });
+    }
+
+    function initFx(){
+      var audInput = document.getElementById("fx-aud");
+      var twdInput = document.getElementById("fx-twd");
+      var refreshBtn = document.getElementById("fx-refresh");
+      var tagline = document.getElementById("fx-tagline");
+
+      // 從 localStorage 讀取舊匯率
+      var saved = localStorage.getItem("sydDiaryFxRate");
+      if(saved){
+        var r = parseFloat(saved);
+        if(!isNaN(r) && r > 0){
+          fxRate = r;
+        }
+      }
+      updateFxLabel(true);
+      if(tagline){
+        tagline.textContent = "匯率由網路更新，僅供參考。輸入任一欄，另一邊會自動幫你算。";
+      }
+
+      function audChanged(){
+        var aud = parseFloat(audInput.value || "0");
+        if(fxRate > 0){
+          twdInput.value = (aud * fxRate).toFixed(0);
+        } else {
+          twdInput.value = "";
+        }
+      }
+      function twdChanged(){
+        var twd = parseFloat(twdInput.value || "0");
+        if(fxRate > 0){
+          audInput.value = (twd / fxRate).toFixed(2);
+        } else {
+          audInput.value = "";
+        }
+      }
+
+      audInput.addEventListener("input", audChanged);
+      twdInput.addEventListener("input", twdChanged);
+
+      refreshBtn.addEventListener("click", function(){
+        fetchFxRate();
+      });
+
+      // 一進頁面先嘗試更新一次
+      fetchFxRate();
+    }
+
+    /* ========= 行程資料 ========= */
     var trip = {
       name: "雪梨跨年 10 日遊",
       dateRange: "2025/12/23 – 2026/01/02",
       days: [
         {
           id:"d0",
-          label:"出發日｜2025/12/23",
+          label:"出發日｜12/23",
+          theme:"晚班機出發",
+          date:"2025/12/23",
           title:"出發日｜TPE → SYD",
           subtitle:"晚班機飛往雪梨，在機上休息調時差",
           stay:"機上過夜",
-          weatherLabel:"查看桃園機場天氣",
-          weatherUrl:"https://www.google.com/search?q=taoyuan+airport+weather+2025-12-23",
+          stayMap:"https://www.google.com/maps/place/Taiwan+Taoyuan+International+Airport",
           highCal:false,
           walk:3000,
           schedule:[
@@ -377,11 +1010,12 @@
         {
           id:"d1",
           label:"Day 1｜12/24",
+          theme:"抵達・北雪梨港灣",
+          date:"2025/12/24",
           title:"Day 1｜抵達＆北雪梨散步",
           subtitle:"抵達雪梨，入住 North Sydney，下午港灣散步",
           stay:"Citadines Walker North Sydney",
-          weatherLabel:"查看 12/24 雪梨天氣",
-          weatherUrl:"https://www.google.com/search?q=sydney+weather+2025-12-24",
+          stayMap:"https://www.google.com/maps/search/Citadines+Walker+North+Sydney",
           highCal:false,
           walk:8000,
           schedule:[
@@ -400,11 +1034,12 @@
         {
           id:"d2",
           label:"Day 2｜12/25",
+          theme:"聖誕節散步線",
+          date:"2025/12/25",
           title:"Day 2｜聖誕節・雪梨黃金散步線",
           subtitle:"古蹟＋海灣散步，店家多休息，適合拍照",
           stay:"Citadines Walker North Sydney",
-          weatherLabel:"查看 12/25 雪梨天氣",
-          weatherUrl:"https://www.google.com/search?q=sydney+weather+2025-12-25",
+          stayMap:"https://www.google.com/maps/search/Citadines+Walker+North+Sydney",
           highCal:true,
           walk:12000,
           schedule:[
@@ -423,11 +1058,12 @@
         {
           id:"d3",
           label:"Day 3｜12/26",
+          theme:"Boxing Day 購物",
+          date:"2025/12/26",
           title:"Day 3｜Boxing Day 購物＋城市文化",
           subtitle:"大採購日＋博物館",
           stay:"Citadines Walker North Sydney",
-          weatherLabel:"查看 12/26 雪梨天氣",
-          weatherUrl:"https://www.google.com/search?q=sydney+weather+2025-12-26",
+          stayMap:"https://www.google.com/maps/search/Citadines+Walker+North+Sydney",
           highCal:true,
           walk:11000,
           schedule:[
@@ -445,11 +1081,12 @@
         {
           id:"d4",
           label:"Day 4｜12/27",
+          theme:"魚市場・遊船",
+          date:"2025/12/27",
           title:"Day 4｜搬家・魚市場・達令港遊船晚餐",
           subtitle:"北雪梨 → City，魚市場＋遊船晚餐",
           stay:"Metro Hotel Marlow Sydney Central",
-          weatherLabel:"查看 12/27 雪梨天氣",
-          weatherUrl:"https://www.google.com/search?q=sydney+weather+2025-12-27",
+          stayMap:"https://www.google.com/maps/search/Metro+Hotel+Marlow+Sydney+Central",
           highCal:true,
           walk:9000,
           schedule:[
@@ -468,11 +1105,12 @@
         {
           id:"d5",
           label:"Day 5｜12/28",
+          theme:"藍山一日遊",
+          date:"2025/12/28",
           title:"Day 5｜藍山自由行",
           subtitle:"藍山一日，Scenic World＋三姐妹岩",
           stay:"Metro Hotel Marlow Sydney Central",
-          weatherLabel:"查看藍山天氣",
-          weatherUrl:"https://www.google.com/search?q=blue+mountains+weather+2025-12-28",
+          stayMap:"https://www.google.com/maps/search/Metro+Hotel+Marlow+Sydney+Central",
           highCal:false,
           walk:13000,
           schedule:[
@@ -491,11 +1129,12 @@
         {
           id:"d6",
           label:"Day 6｜12/29",
+          theme:"獵人谷酒莊",
+          date:"2025/12/29",
           title:"Day 6｜獵人谷酒莊一日遊（已訂）",
           subtitle:"葡萄酒＋起司盤的一天",
           stay:"Metro Hotel Marlow Sydney Central",
-          weatherLabel:"查看獵人谷天氣",
-          weatherUrl:"https://www.google.com/search?q=hunter+valley+weather+2025-12-29",
+          stayMap:"https://www.google.com/maps/search/Metro+Hotel+Marlow+Sydney+Central",
           highCal:true,
           walk:8000,
           schedule:[
@@ -513,11 +1152,12 @@
         {
           id:"d7",
           label:"Day 7｜12/30",
+          theme:"動物園・Watsons Bay",
+          date:"2025/12/30",
           title:"Day 7｜Taronga Zoo ＋ Watsons Bay ＋ 搬到 Rydges",
           subtitle:"動物園＋海景散步，入住 Rydges Australia Square",
           stay:"Rydges Australia Square（12/30–1/1）",
-          weatherLabel:"查看 12/30 雪梨天氣",
-          weatherUrl:"https://www.google.com/search?q=sydney+weather+2025-12-30",
+          stayMap:"https://www.google.com/maps/search/Rydges+Australia+Square",
           highCal:false,
           walk:11000,
           schedule:[
@@ -536,11 +1176,12 @@
         {
           id:"d8",
           label:"Day 8｜12/31",
+          theme:"歌劇院・跨年",
+          date:"2025/12/31",
           title:"Day 8｜跨年・歌劇院歌劇＋After Party",
           subtitle:"白天市區漫步，晚上歌劇＋煙火",
           stay:"Rydges Australia Square",
-          weatherLabel:"查看 12/31 雪梨天氣",
-          weatherUrl:"https://www.google.com/search?q=sydney+weather+2025-12-31",
+          stayMap:"https://www.google.com/maps/search/Rydges+Australia+Square",
           highCal:true,
           walk:9000,
           schedule:[
@@ -561,11 +1202,12 @@
         {
           id:"d9",
           label:"Day 9｜1/1",
+          theme:"最後散步・回程",
+          date:"2026/01/01",
           title:"Day 9｜最後半天＆回程",
           subtitle:"跨年後睡飽、最後散步，晚上飛回台灣",
           stay:"Rydges Australia Square（早上退房）",
-          weatherLabel:"查看 1/1 雪梨天氣",
-          weatherUrl:"https://www.google.com/search?q=sydney+weather+2026-01-01",
+          stayMap:"https://www.google.com/maps/search/Rydges+Australia+Square",
           highCal:false,
           walk:8000,
           schedule:[
@@ -585,11 +1227,12 @@
         {
           id:"d10",
           label:"回家日｜1/2",
+          theme:"抵達台灣",
+          date:"2026/01/02",
           title:"回家日｜抵達台灣",
           subtitle:"清晨抵達台灣，回家休息",
           stay:"甜甜的家",
-          weatherLabel:"查看台灣天氣",
-          weatherUrl:"https://www.google.com/search?q=taoyuan+weather+2026-01-02",
+          stayMap:"https://www.google.com/maps/place/Taiwan+Taoyuan+International+Airport",
           highCal:false,
           walk:4000,
           schedule:[
@@ -605,78 +1248,101 @@
       ]
     };
 
-    // ----- 渲染 -----
-    var tripListEl   = document.getElementById("trip-list");
-    var dayTabsEl    = document.getElementById("day-tabs");
-    var dayHeaderEl  = document.getElementById("day-header");
-    var dayScheduleEl= document.getElementById("day-schedule");
-    var dayMealsEl   = document.getElementById("day-meals");
-
+    /* ========= 渲染 ========= */
+    var dayListEl   = document.getElementById("day-list");
+    var dayHeaderEl = document.getElementById("day-header");
+    var dayScheduleEl = document.getElementById("day-schedule");
+    var dayMealsEl  = document.getElementById("day-meals");
     var currentDayIndex = 0;
 
-    function initTrips(){
-      tripListEl.innerHTML = "";
-      var li = document.createElement("li");
-      li.className = "trip-item active";
-      li.textContent = trip.name + "｜" + trip.dateRange;
-      tripListEl.appendChild(li);
-      renderDayTabs();
-      renderDay(0);
-    }
-
-    function renderDayTabs(){
-      dayTabsEl.innerHTML = "";
+    function initDayList(){
+      dayListEl.innerHTML = "";
       for(var i=0;i<trip.days.length;i++){
         var d = trip.days[i];
-        var btn = document.createElement("button");
-        btn.className = "day-tab" + (i===currentDayIndex?" active":"");
-        btn.textContent = d.label;
-        (function(idx){
-          btn.addEventListener("click",function(){
-            currentDayIndex = idx;
-            renderDayTabs();
-            renderDay(idx);
-          });
-        })(i);
-        dayTabsEl.appendChild(btn);
+        var li = document.createElement("li");
+        li.className = "day-list-item" + (i===0 ? " active" : "");
+        li.setAttribute("data-index", i);
+
+        // 👉 新版：不再加括弧，而是用「｜」串起來
+        var textLeft = d.label;        // 出發日｜12/23 或 Day 1｜12/24
+var parts = textLeft.split("｜");
+var col1 = parts[0] || "";
+var col2 = parts[1] || "";
+var col3 = d.theme || "";
+
+// 用三個 span 塞到三欄
+li.innerHTML =
+  '<span>'+ col1 +'</span>' +
+  '<span>'+ col2 +'</span>' +
+  '<span>'+ col3 +'</span>';
+
+        li.addEventListener("click", function(){
+          var idx = parseInt(this.getAttribute("data-index"),10);
+          currentDayIndex = idx;
+          updateDayListActive();
+          renderDay(idx);
+        });
+        dayListEl.appendChild(li);
+      }
+    }
+
+    function updateDayListActive(){
+      var items = dayListEl.querySelectorAll(".day-list-item");
+      for(var i=0;i<items.length;i++){
+        items[i].classList.toggle("active", i === currentDayIndex);
       }
     }
 
     function renderDay(index){
       var d = trip.days[index];
-      // header
-      var banner = '<div class="day-banner">';
-      banner += '<div><span class="banner-label">🏨 今晚住宿</span>'+ d.stay +'</div>';
-      banner += '<div class="banner-weather"><span class="weather-icon">⛅</span>';
-      banner += '<a href="'+ d.weatherUrl +'" target="_blank" rel="noopener noreferrer">';
-      banner += '<span class="weather-text">'+ d.weatherLabel +'</span></a></div></div>';
+
+      // Header
+      var bannerHTML = '';
+      bannerHTML += '<div class="day-banner">';
+      bannerHTML +=   '<div>';
+      bannerHTML +=     '<span class="banner-label">🏨 今晚住宿</span>';
+      bannerHTML +=     '<span class="banner-hotel-name">'+ d.stay +'</span>';
+      if(d.stayMap){
+        bannerHTML +=   '<a class="banner-hotel-link" href="'+ d.stayMap +'" target="_blank" rel="noopener noreferrer">';
+        bannerHTML +=     '<span class="icon-map"></span><span>地圖</span>';
+        bannerHTML +=   '</a>';
+      }
+      bannerHTML +=   '</div>';
+      bannerHTML += '</div>';
+
       var badges = '';
-      if(d.highCal){ badges += '<span class="badge">🍰 高熱量日</span>'; }
+      if(d.highCal){
+        badges += '<span class="badge badge-highcal">🍰 高熱量日</span>';
+      }
       badges += '<span class="badge">🚶 目標 '+ d.walk.toLocaleString() +' 步</span>';
+
       dayHeaderEl.innerHTML =
-        banner +
+        bannerHTML +
         '<div class="day-title">'+ d.title +'</div>'+
         '<div class="day-subtitle">'+ d.subtitle +'</div>'+
         '<div class="badge-row">'+ badges +'</div>';
 
-      // schedule
+      // Schedule
       dayScheduleEl.innerHTML = '<div class="section-title">📋 行程時間軸</div>';
       for(var i=0;i<d.schedule.length;i++){
         var b = d.schedule[i];
         var row = document.createElement("div");
         row.className = "schedule-row";
-        var mapHtml = b.map ? ' <a href="'+b.map+'" target="_blank" rel="noopener noreferrer">📍 地圖</a>' : '';
+        var mapHtml = '';
+        if(b.map){
+          mapHtml = '<a href="'+b.map+'" target="_blank" rel="noopener noreferrer"><span class="icon-map"></span> 地圖</a>';
+        }
         row.innerHTML =
           '<div class="time-cell">'+ b.time +'</div>'+
           '<div>'+
-          '<div class="block-title">'+ b.title +'</div>'+
-          '<div class="block-detail">'+ (b.detail||"") +'</div>'+
-          '<div class="block-meta">'+ mapHtml +'</div>'+
+            '<div class="block-title">'+ b.title +'</div>'+
+            '<div class="block-detail">'+ (b.detail||"") +'</div>'+
+            '<div class="block-meta">'+ (mapHtml || '') +'</div>'+
           '</div>';
         dayScheduleEl.appendChild(row);
       }
 
-      // meals
+      // Meals
       dayMealsEl.innerHTML = '<div class="section-title">🍽️ 今日三餐</div>';
       var wrap = document.createElement("div");
       wrap.className = "meals-grid";
@@ -687,24 +1353,58 @@
         card.className = "meal-card";
         var meal = d.meals[key];
         if(meal){
+          var tagClass = meal.reserve ? "meal-tag meal-tag-reserve" : "meal-tag";
+          var tagText  = meal.reserve ? "📅 建議預約" : "🙂 不需預約";
           card.innerHTML =
             '<div class="meal-title">'+ label +'</div>'+
             '<div class="meal-restaurant">'+ meal.name +'</div>'+
-            '<div class="meal-note">類型：'+ (meal.type||"—") +'<br/>'+(meal.note||"")+'</div>'+
-            '<div class="meal-tag">'+ (meal.reserve?'📅 建議預約':'🙂 不需預約') +'</div>';
+            '<div class="meal-note">類型：'+ (meal.type||"—")+'<br>'+ (meal.note||"") +'</div>'+
+            '<div class="'+tagClass+'">'+ tagText +'</div>';
         }else{
           card.innerHTML =
             '<div class="meal-title">'+ label +'</div>'+
-            '<div class="meal-note" style="font-size:12px;color:#9ca3af;">尚未安排。</div>';
+            '<div class="meal-note" style="font-size:12px;color:var(--text-muted);">尚未安排。</div>';
         }
         wrap.appendChild(card);
       }
       dayMealsEl.appendChild(wrap);
     }
 
-    // 初始化
+    /* ========= 側邊欄收合 ========= */
+    function initSidebarToggle(){
+      var toggle = document.getElementById("sidebar-toggle");
+      var sidebar = document.getElementById("sidebar");
+      var overlay = document.getElementById("sidebar-overlay");
+
+      function openSidebar(){
+        sidebar.classList.add("open");
+        overlay.classList.add("active");
+      }
+      function closeSidebar(){
+        sidebar.classList.remove("open");
+        overlay.classList.remove("active");
+      }
+
+      toggle.addEventListener("click", function(){
+        if(sidebar.classList.contains("open")){
+          closeSidebar();
+        }else{
+          openSidebar();
+        }
+      });
+      overlay.addEventListener("click", closeSidebar);
+    }
+
+    /* ========= INIT ========= */
     initThemeUI();
-    initTrips();
+    initFx();
+    initDayList();
+    renderDay(0);
+    updateTimes();
+    setInterval(updateTimes, 1000);
+    fetchSydneyWeather();
+    setInterval(fetchSydneyWeather, 10*60*1000);
+    initSidebarToggle();
   </script>
 </body>
 </html>
