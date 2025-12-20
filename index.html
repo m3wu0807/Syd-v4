@@ -228,26 +228,40 @@
 
 /* 側邊欄：天數列表（更緊湊、3 欄固定對齊、不超出欄寬） */
 .day-list-item{
-  font-size: 10px;              /* 更小一點 */
-  padding: 6px 5px;             /* ✅ 再緊：少兩個全形字的感覺 */
+  font-size: 12px;                  /* ✅ 字體放大（原本 10–11） */
+  padding: 6px 5px;                 /* 上下仍維持舒服 */
   border-radius: 999px;
   cursor: pointer;
+
   display: grid;
-  grid-template-columns: 48px 78px minmax(0,1fr); /* ✅ 省空間 */
+
+  /* Day | 日期 | 主題 */
+  grid-template-columns: 44px 64px minmax(0,1fr);
+  /*            ↑     ↑
+     Day→日期 ≈ 1 個全形字元
+     主題保留最大空間 */
+
   align-items: center;
-  column-gap: 2px;              /* ✅ 再縮 */
-  line-height: 1.4;            /* ✅ 行距更緊 */
+
+  column-gap: 2px;                  /* Day ↔ 日期 幾乎貼齊 */
+  line-height: 1.6;
   color: var(--text-body);
 }
 
+/* Day / 日期：固定一行 */
 .day-list-item .day-col1,
-.day-list-item .day-col2{ white-space: nowrap; }
+.day-list-item .day-col2{
+  white-space: nowrap;
+}
 
+/* 主題：保留閱讀距離 + 不爆版 */
 .day-list-item .day-col3{
   min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+
+  padding-left: 10px;               /* ✅ 日期 ↔ 主題 保留原本距離 */
 }
 
 .day-list-item.active{
@@ -255,6 +269,7 @@
   color:#fff;
 }
 
+    
 /* ✅ 內容區寬度固定（每一頁三張白卡都一致） */
 .content {
   flex: 1;
