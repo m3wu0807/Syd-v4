@@ -485,6 +485,13 @@
       margin-bottom: 4px;
     }
 
+    .day-date {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+      font-variant-numeric: tabular-nums;
+}
+
     .day-subtitle {
       font-size: 13px;
       color: var(--text-subtitle);
@@ -877,6 +884,19 @@ function defaultTheme(){
       }
     }
 
+
+function formatDateLabel(dateStr){
+  var d = new Date(dateStr);
+  if (isNaN(d)) return "";
+
+  var y = d.getFullYear();
+  var m = String(d.getMonth() + 1).padStart(2, "0");
+  var day = String(d.getDate()).padStart(2, "0");
+  var w = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][d.getDay()];
+
+  return y + "/" + m + "/" + day + "（" + w + "）";
+}
+    
     /* ========= 雪梨即時天氣（Open-Meteo） ========= */
     function fetchSydneyWeather(){
       var weatherMain = document.getElementById("weather-main");
@@ -1378,9 +1398,10 @@ li.innerHTML =
 
       dayHeaderEl.innerHTML =
         bannerHTML +
-        '<div class="day-title">'+ d.title +'</div>'+
-        '<div class="day-subtitle">'+ d.subtitle +'</div>'+
-        '<div class="badge-row">'+ badges +'</div>';
+  '<div class="day-date">📅 '+ d.dateLabel +'</div>' +
+  '<div class="day-title">'+ d.title +'</div>'+
+  '<div class="day-subtitle">'+ d.subtitle +'</div>'+
+  '<div class="badge-row">'+ badges +'</div>';
 
       // Schedule
       dayScheduleEl.innerHTML = '<div class="section-title">📋 行程時間軸</div>';
