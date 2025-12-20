@@ -229,14 +229,14 @@
 /* 側邊欄：天數列表（更緊湊、3 欄固定對齊、不超出欄寬） */
 .day-list-item{
   font-size: 10px;              /* 更小一點 */
-  padding: 2px 5px;             /* ✅ 再緊：少兩個全形字的感覺 */
+  padding: 6px 5px;             /* ✅ 再緊：少兩個全形字的感覺 */
   border-radius: 999px;
   cursor: pointer;
   display: grid;
   grid-template-columns: 48px 78px minmax(0,1fr); /* ✅ 省空間 */
   align-items: center;
   column-gap: 2px;              /* ✅ 再縮 */
-  line-height: 1.25;            /* ✅ 行距更緊 */
+  line-height: 1.6;            /* ✅ 行距更緊 */
   color: var(--text-body);
 }
 
@@ -912,34 +912,67 @@ function fetchFxRate(){
   var tagline = document.getElementById("fx-tagline");
   if(label) label.textContent = "匯率更新中…";
 
-  // ✅ 改用 Frankfurter（免 key、穩定）
-  fetch("https://api.frankfurter.app/latest?from=AUD&to=TWD", { cache: "no-store" })
-    .then(function(res){ return res.json(); })
-    .then(function(data){
-      var rate = data && data.rates && data.rates.TWD;
-
-      if(typeof rate === "number" && rate > 0){
-        fxRate = rate;
-        localStorage.setItem("sydDiaryFxRate", fxRate.toString());
-        updateFxLabel(true);
-        if(tagline){
-          tagline.textContent = "匯率已更新（每次手動/進頁會抓最新），僅供參考。輸入任一欄，另一邊會自動幫你算。";
-        }
-      }else{
-        if(isNaN(fxRate) || fxRate <= 0) fxRate = 20.0;
-        updateFxLabel(false);
-        if(tagline){
-          tagline.textContent = "匯率更新失敗，暫以 20.00 計算。仍可輸入金額換算。";
-        }
+  // ✅ 多來源備援：哪個你網路打得開就用哪個
+  var endpoints = [
+    // 1) jsDelivr CDN（通常最容易通）
+    {
+      name: "jsdelivr-currency",
+      url: "https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/aud/twd.json",
+      parse: function(data){
+        // { "date": "...", "twd": 20.1234 }
+        return data && typeof data.twd === "number" ? data.twd : null;
       }
-    })
-    .catch(function(){
+    },
+    // 2) open.er-api（免費免 key，常見可用）
+    {
+      name: "open-er-api",
+      url: "https://open.er-api.com/v6/latest/AUD",
+      parse: function(data){
+        // { rates: { TWD: 20.12, ... }, result: "success" }
+        return data && data.rates && typeof data.rates.TWD === "number" ? data.rates.TWD : null;
+      }
+    },
+    // 3) frankfurter（如果你那邊打得開也可）
+    {
+      name: "frankfurter",
+      url: "https://api.frankfurter.app/latest?from=AUD&to=TWD",
+      parse: function(data){
+        return data && data.rates && typeof data.rates.TWD === "number" ? data.rates.TWD : null;
+      }
+    }
+  ];
+
+  var i = 0;
+
+  function tryNext(){
+    if(i >= endpoints.length){
+      // 全部失敗：維持原本或 fallback 20
       if(isNaN(fxRate) || fxRate <= 0) fxRate = 20.0;
       updateFxLabel(false);
-      if(tagline){
-        tagline.textContent = "匯率更新失敗，暫以 20.00 計算。仍可輸入金額換算。";
-      }
-    });
+      if(tagline) tagline.textContent = "匯率更新失敗，暫以 20.00 計算。仍可輸入金額換算。";
+      return;
+    }
+
+    var ep = endpoints[i++];
+    fetch(ep.url, { cache: "no-store" })
+      .then(function(res){ return res.json(); })
+      .then(function(data){
+        var rate = ep.parse(data);
+        if(typeof rate === "number" && rate > 0){
+          fxRate = rate;
+          localStorage.setItem("sydDiaryFxRate", fxRate.toString());
+          updateFxLabel(true);
+          if(tagline) tagline.textContent = "匯率已更新（自動備援來源），僅供參考。輸入任一欄，另一邊會自動幫你算。";
+        }else{
+          tryNext();
+        }
+      })
+      .catch(function(){
+        tryNext();
+      });
+  }
+
+  tryNext();
 }
 
     function initFx(){
