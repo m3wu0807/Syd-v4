@@ -646,7 +646,7 @@
         </button>
         <div class="top-bar-main">
           <div class="app-title">家碩&雨恬｜Sydney Diary</div>
-          <div class="subtitle">V3.1｜單檔版｜可自行切換日期頁面載入行程</div>
+          <div class="subtitle">V3.2｜單檔版｜可自行切換日期頁面載入行程</div>
           <div class="time-weather-row">
             <div class="time-block">
               <div class="icon-circle icon-clock"></div>
@@ -1376,7 +1376,7 @@ li.innerHTML =
     function renderDay(index){
       var d = trip.days[index];
 
-      // Header
+            // Header
       var bannerHTML = '';
       bannerHTML += '<div class="day-banner">';
       bannerHTML +=   '<div>';
@@ -1398,11 +1398,11 @@ li.innerHTML =
 
       dayHeaderEl.innerHTML =
         bannerHTML +
-  '<div class="day-date">📅 ' + formatDateLabel(d.date) + '</div>'
-  '<div class="day-title">'+ d.title +'</div>'+
-  '<div class="day-subtitle">'+ d.subtitle +'</div>'+
-  '<div class="badge-row">'+ badges +'</div>';
-
+        '<div class="day-date">📅 ' + formatDateLabel(d.date) + '</div>' +
+        '<div class="day-title">'+ d.title +'</div>' +
+        '<div class="day-subtitle">'+ d.subtitle +'</div>' +
+        '<div class="badge-row">'+ badges +'</div>';
+      
       // Schedule
       dayScheduleEl.innerHTML = '<div class="section-title">📋 行程時間軸</div>';
       for(var i=0;i<d.schedule.length;i++){
